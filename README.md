@@ -1,31 +1,29 @@
 This is a simple mindsweeper game with 3 levels (Easy, Hard, Medium). The code was generated fully using ChatGPT. 
 
-#Controls
+# Controls:
 
-    Left-click / Tap a cell to reveal it.
+Left-click / Tap a cell to reavel it.
+Right-click / Long-press a cell to place or remove a 🚩 flag (mark suspected bombs).
+Use the Restart button to begin a new game.
+Choose difficulty (Easy, Medium, Hard) to adjust grid size and bomb count.
 
-    Right-click / Long-press a cell to place or remove a 🚩 flag (mark suspected bombs).
+# How to Play:
 
-    Use the Restart button to begin a new game.
+Click a cell to start the game. The timer will begin.
 
-    Choose difficulty (Easy, Medium, Hard) to adjust grid size and bomb count.
+ If the cell:
 
-#How to Play
+   💥 Has a bomb → Game Over!
 
-    Click a cell to start the game. The timer will begin.
+   🟦 Has a number → It tells how many bombs are in adjacent cells (up to 8).
 
-    If the cell:
+   ⬜ Is empty → It automatically reveals surrounding empty and numbered cells.
 
-        💥 Has a bomb → Game Over!
 
-        🟦 Has a number → It tells how many bombs are in adjacent cells (up to 8).
+   Use flags (🚩) to mark where you think bombs are. Flags don’t stop you from clicking, but they help you keep track.
 
-        ⬜ Is empty → It automatically reveals surrounding empty and numbered cells.
+# Winning Condition
 
-    Use flags (🚩) to mark where you think bombs are. Flags don’t stop you from clicking, but they help you keep track.
+You win when all safe cells (non-bomb cells) are revealed.
 
-#Winning Condition
-
-    You win when all safe cells (non-bomb cells) are revealed.
-
-    The number of flags is for your reference—you don't have to flag every bomb to win.
+The number of flags is for your reference—you don't have to flag every bomb to win.
