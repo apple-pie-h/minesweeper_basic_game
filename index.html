@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple Minesweeper</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #game {
+      display: grid;
+      grid-template-columns: repeat(10, 30px);
+      grid-template-rows: repeat(10, 30px);
+      gap: 2px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .cell {
+      width: 30px;
+      height: 30px;
+      background-color: #874ae9;
+      border: 1px solid #396edf;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 30px;
+      user-select: none;
+    }
+    .cell.revealed {
+      background-color: #828bff;
+      cursor: default;
+    }
+    .cell.bomb {
+      background-color: red;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Minesweeper</h1>
+<button onclick="initGame()">Restart</button>
+<div id="game"></div>
+
+<script>
+  const gridSize = 10;
+  const bombCount = 15;
+  let gameBoard = [];
+
+  function initGame() {
+    const game = document.getElementById('game');
+    game.innerHTML = '';
+    gameBoard = [];
+
+    // Create gameBoard array
+    for (let row = 0; row < gridSize; row++) {
+      const rowArray = [];
+      for (let col = 0; col < gridSize; col++) {
+        rowArray.push({ bomb: false, revealed: false, count: 0 });
+      }
+      gameBoard.push(rowArray);
+    }
+
+    // Place bombs
+    let bombsPlaced = 0;
+    while (bombsPlaced < bombCount) {
+      const r = Math.floor(Math.random() * gridSize);
+      const c = Math.floor(Math.random() * gridSize);
+      if (!gameBoard[r][c].bomb) {
+        gameBoard[r][c].bomb = true;
+        bombsPlaced++;
+      }
+    }
+
+    // Calculate numbers
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        if (!gameBoard[r][c].bomb) {
+          let count = 0;
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const nr = r + dr;
+              const nc = c + dc;
+              if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize && gameBoard[nr][nc].bomb) {
+                count++;
+              }
+            }
+          }
+          gameBoard[r][c].count = count;
+        }
+      }
+    }
+
+    // Render grid
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+        cell.addEventListener('click', () => reveal(r, c));
+        game.appendChild(cell);
+      }
+    }
+  }
+
+  function reveal(r, c) {
+    const cellData = gameBoard[r][c];
+    const cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+    if (cellData.revealed) return;
+    cellData.revealed = true;
+    cell.classList.add('revealed');
+
+    if (cellData.bomb) {
+      cell.classList.add('bomb');
+      cell.textContent = '💣';
+      alert('Game Over!');
+      revealAll();
+    } else {
+      if (cellData.count > 0) {
+        cell.textContent = cellData.count;
+      } else {
+        // reveal adjacent cells recursively
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const nr = r + dr;
+            const nc = c + dc;
+            if (
+              nr >= 0 && nr < gridSize &&
+              nc >= 0 && nc < gridSize &&
+              !(dr === 0 && dc === 0)
+            ) {
+              reveal(nr, nc);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function revealAll() {
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+        if (!gameBoard[r][c].revealed) {
+          cell.classList.add('revealed');
+          if (gameBoard[r][c].bomb) {
+            cell.textContent = '💣';
+            cell.classList.add('bomb');
+          } else if (gameBoard[r][c].count > 0) {
+            cell.textContent = gameBoard[r][c].count;
+          }
+        }
+      }
+    }
+  }
+
+  window.onload = initGame;
+</script>
+
+</body>
+</html>
