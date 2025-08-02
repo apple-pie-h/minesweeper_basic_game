@@ -5,56 +5,107 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Minesweeper Game</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      text-align: center;
+    :root {
+      --bg-gradient: linear-gradient(to bottom right, #e1f5fe, #fce4ec);
+      --cell: #b0bec5;
+      --cell-hover: #90a4ae;
+      --cell-revealed: #eceff1;
+      --cell-flag: #ffd54f;
+      --bomb: #ef5350;
+      --grid-gap: 3px;
     }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--bg-gradient);
+      color: #333;
+      text-align: center;
+      min-height: 100vh;
+    }
+
     h1 {
       margin-bottom: 10px;
     }
+
     #topbar {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
     }
+
     #game {
       display: grid;
-      gap: 2px;
+      gap: var(--grid-gap);
       justify-content: center;
       touch-action: manipulation;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      margin: auto;
     }
+
     .cell {
-      width: 30px;
-      height: 30px;
-      background-color: #ccc;
-      border: 1px solid #999;
+      width: 35px;
+      height: 35px;
+      background-color: var(--cell);
+      border: 1px solid #78909c;
       font-size: 16px;
-      line-height: 30px;
+      font-weight: bold;
+      line-height: 35px;
       cursor: pointer;
       user-select: none;
+      border-radius: 5px;
+      transition: background-color 0.2s, transform 0.1s;
     }
+
+    .cell:hover:not(.revealed):not(.flagged) {
+      background-color: var(--cell-hover);
+      transform: scale(1.05);
+    }
+
     .cell.revealed {
-      background-color: #eee;
+      background-color: var(--cell-revealed);
       cursor: default;
     }
+
     .cell.bomb {
-      background-color: red;
+      background-color: var(--bomb);
+      color: white;
     }
+
     .cell.flagged {
-      background-color: #ffea00;
+      background-color: var(--cell-flag);
     }
+
     select, button {
-      padding: 5px 10px;
+      padding: 6px 12px;
+      border: 1px solid #bbb;
+      border-radius: 5px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    select:hover, button:hover {
+      background: #f0f0f0;
+    }
+
+    #timer, #flags {
+      font-size: 16px;
+      font-weight: 500;
     }
   </style>
 </head>
 <body>
 
-<h1>Minesweeper</h1>
+<h1>💣 Minesweeper 💣</h1>
 <div id="topbar">
   <label for="difficulty">Difficulty:</label>
   <select id="difficulty">
@@ -62,14 +113,14 @@
     <option value="medium" selected>Medium (10x10, 15 bombs)</option>
     <option value="hard">Hard (12x12, 25 bombs)</option>
   </select>
-  <button onclick="initGame()">Restart</button>
+  <button onclick="initGame()">🔄 Restart</button>
   <span id="timer">⏱ 0s</span>
   <span id="flags">🚩 0</span>
 </div>
 <div id="game"></div>
 
 <script>
-  let gridSize = 10;
+let gridSize = 10;
   let bombCount = 15;
   let gameBoard = [];
   let timerInterval;
@@ -102,12 +153,11 @@
     bombCount = difficultySettings[difficulty].bombs;
     const game = document.getElementById('game');
     game.innerHTML = '';
-    game.style.gridTemplateColumns = `repeat(${gridSize}, 30px)`;
+    game.style.gridTemplateColumns = `repeat(${gridSize}, 35px)`;
     gameBoard = [];
     flagCount = 0;
     document.getElementById("flags").textContent = `🚩 ${flagCount}`;
 
-    // Setup board
     for (let r = 0; r < gridSize; r++) {
       const row = [];
       for (let c = 0; c < gridSize; c++) {
@@ -116,7 +166,6 @@
       gameBoard.push(row);
     }
 
-    // Place bombs
     let placed = 0;
     while (placed < bombCount) {
       const r = Math.floor(Math.random() * gridSize);
@@ -127,7 +176,6 @@
       }
     }
 
-    // Calculate counts
     for (let r = 0; r < gridSize; r++) {
       for (let c = 0; c < gridSize; c++) {
         if (!gameBoard[r][c].bomb) {
@@ -146,7 +194,6 @@
       }
     }
 
-    // Create cells
     for (let r = 0; r < gridSize; r++) {
       for (let c = 0; c < gridSize; c++) {
         const cell = document.createElement('div');
@@ -207,7 +254,6 @@
       if (cell.count > 0) {
         cellEl.textContent = cell.count;
       } else {
-        // Reveal neighbors
         for (let dr = -1; dr <= 1; dr++) {
           for (let dc = -1; dc <= 1; dc++) {
             const nr = r + dr;
