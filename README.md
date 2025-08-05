@@ -1,4 +1,4 @@
-# you can play the game@: https://apple-pie-h.github.io/minesweeper_basic_game/
+### you can play the game@: https://apple-pie-h.github.io/minesweeper_basic_game/
 
 This is a simple mindsweeper game with 3 levels (Easy, Hard, Medium). The code was generated fully using ChatGPT. 
 
