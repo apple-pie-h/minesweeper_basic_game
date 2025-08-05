@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Minesweeper Game</title>
   <style>
     :root {
@@ -34,8 +34,14 @@
       justify-content: center;
       align-items: center;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
+    }
+
+    #scoreboard {
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #555;
     }
 
     #game {
@@ -106,6 +112,7 @@
 <body>
 
 <h1>💣 Minesweeper 💣</h1>
+
 <div id="topbar">
   <label for="difficulty">Difficulty:</label>
   <select id="difficulty">
@@ -117,16 +124,32 @@
   <span id="timer">⏱ 0s</span>
   <span id="flags">🚩 0</span>
 </div>
+
+<div id="scoreboard">🏆 Best Times → Easy: -- | Medium: -- | Hard: --</div>
 <div id="game"></div>
 
+<!-- Sound Effects -->
+<audio id="sound-click" src="https://assets.mixkit.co/sfx/download/mixkit-select-click-1109.wav"></audio>
+<audio id="sound-flag" src="https://assets.mixkit.co/sfx/download/mixkit-game-click-1114.wav"></audio>
+<audio id="sound-win" src="https://assets.mixkit.co/sfx/download/mixkit-game-level-completed-2059.wav"></audio>
+<audio id="sound-lose" src="https://assets.mixkit.co/sfx/download/mixkit-wrong-answer-fail-notification-946.wav"></audio>
+
 <script>
-let gridSize = 10;
+  let gridSize = 10;
   let bombCount = 15;
   let gameBoard = [];
   let timerInterval;
   let timeElapsed = 0;
   let flagCount = 0;
   let gameOver = false;
+  let firstClick = true;
+
+  const sounds = {
+    click: document.getElementById('sound-click'),
+    flag: document.getElementById('sound-flag'),
+    win: document.getElementById('sound-win'),
+    lose: document.getElementById('sound-lose')
+  };
 
   const difficultySettings = {
     easy: { size: 8, bombs: 10 },
@@ -147,7 +170,9 @@ let gridSize = 10;
   }
 
   function initGame() {
+    clearInterval(timerInterval);
     gameOver = false;
+    firstClick = true;
     const difficulty = document.getElementById("difficulty").value;
     gridSize = difficultySettings[difficulty].size;
     bombCount = difficultySettings[difficulty].bombs;
@@ -157,6 +182,7 @@ let gridSize = 10;
     gameBoard = [];
     flagCount = 0;
     document.getElementById("flags").textContent = `🚩 ${flagCount}`;
+    document.getElementById("timer").textContent = `⏱ 0s`;
 
     for (let r = 0; r < gridSize; r++) {
       const row = [];
@@ -211,7 +237,7 @@ let gridSize = 10;
       }
     }
 
-    startTimer();
+    updateScoreboard();
   }
 
   function handleFlag(r, c) {
@@ -219,6 +245,8 @@ let gridSize = 10;
     const cell = gameBoard[r][c];
     if (cell.revealed) return;
     const cellEl = getCellElement(r, c);
+
+    sounds.flag.play();
 
     if (!cell.flagged) {
       cell.flagged = true;
@@ -239,17 +267,25 @@ let gridSize = 10;
     const cell = gameBoard[r][c];
     if (cell.revealed || cell.flagged) return;
 
+    if (firstClick) {
+      startTimer();
+      firstClick = false;
+    }
+
     const cellEl = getCellElement(r, c);
     cell.revealed = true;
     cellEl.classList.add('revealed');
 
+    sounds.click.play();
+
     if (cell.bomb) {
       cellEl.classList.add('bomb');
       cellEl.textContent = '💣';
-      alert('Game Over!');
       revealAll();
       clearInterval(timerInterval);
       gameOver = true;
+      sounds.lose.play();
+      showLoseMeme();
     } else {
       if (cell.count > 0) {
         cellEl.textContent = cell.count;
@@ -264,6 +300,7 @@ let gridSize = 10;
           }
         }
       }
+      checkWin();
     }
   }
 
@@ -283,6 +320,79 @@ let gridSize = 10;
         }
       }
     }
+  }
+
+  function checkWin() {
+    let revealedCount = 0;
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        if (gameBoard[r][c].revealed) revealedCount++;
+      }
+    }
+    if (revealedCount === gridSize * gridSize - bombCount) {
+      clearInterval(timerInterval);
+      gameOver = true;
+      sounds.win.play();
+      saveBestTime();
+      showWinMeme();
+    }
+  }
+
+  function showWinMeme() {
+    const meme = document.createElement("div");
+    meme.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                  background: rgba(0,0,0,0.6); display: flex; align-items: center;
+                  justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 20px; border-radius: 10px;
+                    text-align: center; max-width: 90%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
+          <h2>🎉 You Win! 🎉</h2>
+          <img src="https://media.tenor.com/j2YfMZRxmfYAAAAC/mr-bean-congratulations.gif"
+               alt="You Win Meme" style="max-width: 100%; border-radius: 10px;" />
+          <br><br>
+          <button onclick="this.parentElement.parentElement.remove()">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(meme);
+  }
+
+  function showLoseMeme() {
+    const meme = document.createElement("div");
+    meme.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                  background: rgba(0,0,0,0.6); display: flex; align-items: center;
+                  justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 20px; border-radius: 10px;
+                    text-align: center; max-width: 90%; box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
+          <h2>💥 You Lost! 💥</h2>
+          <img src="https://media.tenor.com/ALrZz3UcwfsAAAAC/homer-simpson-bush.gif"
+               alt="You Lose Meme" style="max-width: 100%; border-radius: 10px;" />
+          <br><br>
+          <button onclick="this.parentElement.parentElement.remove()">Try Again</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(meme);
+  }
+
+  function saveBestTime() {
+    const difficulty = document.getElementById("difficulty").value;
+    const key = `bestTime-${difficulty}`;
+    const best = localStorage.getItem(key);
+    if (!best || timeElapsed < parseInt(best)) {
+      localStorage.setItem(key, timeElapsed);
+      updateScoreboard();
+    }
+  }
+
+  function updateScoreboard() {
+    const difficulties = ["easy", "medium", "hard"];
+    const scores = difficulties.map(diff => {
+      const time = localStorage.getItem(`bestTime-${diff}`);
+      return `${diff.charAt(0).toUpperCase() + diff.slice(1)}: ${time ? time + 's' : '--'}`;
+    });
+    document.getElementById("scoreboard").innerText = `🏆 Best Times → ${scores.join(" | ")}`;
   }
 
   function getCellElement(r, c) {
